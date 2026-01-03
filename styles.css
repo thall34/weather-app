@@ -1,0 +1,44 @@
+body {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    height: fit-content;
+    width: 40%;
+    margin: 50px;
+    padding: 50px;
+    border: 1px solid black;
+    border-radius: 50px;
+}
+
+#range {
+    display: flex;
+    gap: 20px;
+}
+
+#week {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr;
+    grid-template-rows: repeat(6, 1fr);
+    gap: 20px;
+}
+
+#hourly {
+    display: flex;
+    gap: 11px;
+    max-width: 100%;
+    overflow: scroll;
+    overflow-y: hidden;
+}
+
+.hour {
+    display: flex;
+    flex-direction: column;
+}
