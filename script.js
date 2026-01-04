@@ -1,5 +1,6 @@
 // if tempScale is true, then temperature readouts will be in Celsius, Fahrenheit if false
 var tempScale = true;
+
 var locationValue = undefined;
 var weekForecast = [];
 var hourlyForecast = [];
@@ -13,25 +14,50 @@ const celsius = document.getElementById("C");
 const fahrenheit = document.getElementById("F");
 
 submit.addEventListener("click", async (e) => {
+    // prevents regular form submission
     e.preventDefault();
 
-    locationValue = input.value;
-    const data = await getWeatherData(locationValue);
+    // checks if input field is empty
+    if (input.value === "") {
+        input.setCustomValidity("Please input a location");
+        input.reportValidity();
+    } else {
+        input.setCustomValidity("");
 
-    container.innerHTML = "";
-    container.style.display = "flex";
-    weekForecast = createWeekForecast(data.days);
-    hourlyForecast = createHourlyForecast(data.days[0].hours);
+        // sets location value to user input, capitalizes the first letter for appearance
+        locationValue = (input.value).charAt(0).toUpperCase() + (input.value).slice(1);
 
-    displayCurrentDayForecast(locationValue, weekForecast, container);
-    displayWeeklyForecast(weekForecast, container);
-    displayHourlyForecast(hourlyForecast, container);
-    
-    form.reset();
+        try {
+            const data = await getWeatherData(locationValue);
+
+            // sets arrays for the forecasts to the appropriate array objects from the fetch data
+            weekForecast = createWeekForecast(data.days);
+            hourlyForecast = createHourlyForecast(data.days[0].hours);
+
+            // resets the container HTML and displays it if it is hidden (default page load)
+            container.innerHTML = "";
+            container.style.display = "flex";
+
+            // displays appropriate values from the array objects fetched from the API
+            displayCurrentDayForecast(locationValue, weekForecast, container);
+            displayWeeklyForecast(weekForecast, container);
+            displayHourlyForecast(hourlyForecast, container);
+
+            // resets the form for any additional inputs
+            form.reset();
+
+        // if the fetch returns an error it will log a custom error to the input
+        } catch (error) {
+            input.setCustomValidity("Location could not be found, please try again");
+            input.reportValidity();
+        }
+    };
 });
 
+// changes the scale to celsius. If the data is already displayed it will re-display using celsius
 celsius.addEventListener("change", () => {
     tempScale = true;
+
     if (container.innerHTML !== "") {
         container.innerHTML = "";
         displayCurrentDayForecast(locationValue, weekForecast, container);
@@ -40,8 +66,10 @@ celsius.addEventListener("change", () => {
     };
 });
 
+// changes the scale to fahrenheit. If the data is already displayed it will re-display using fahrenheit
 fahrenheit.addEventListener("change", () => {
     tempScale = false;
+
     if (container.innerHTML !== "") {
         container.innerHTML = "";
         displayCurrentDayForecast(locationValue, weekForecast, container);
@@ -50,23 +78,24 @@ fahrenheit.addEventListener("change", () => {
     };
 });
 
-// async function that fetches location weather data from virtual crossing
+// async function that fetches location weather data from virtual crossing with a user input location, returns an error if it can't find the location
 async function getWeatherData(location) {
     try {
         const response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&key=GCACYYDMAQGHRW9LEL4NCZSRJ`)
         
         if (!response.ok) {
-            return new Error("Error, data could not be found")
+            return new Error("error")
         }
 
         const data = await response.json();
         return data;
 
     } catch (error) {
-        return new Error("Fetch Error");
+        return new Error("error");
     }
 };
 
+// creates a day object with all relevant details
 function createDayObject(day) {
     return {
         day: day.datetime,
@@ -79,6 +108,7 @@ function createDayObject(day) {
     }
 };
 
+// creates an array of seven day objects to be displayed later
 function createWeekForecast(sourceArray) {
     const weekArray = [];
 
@@ -90,6 +120,7 @@ function createWeekForecast(sourceArray) {
     return weekArray;
 };
 
+// creates an hour object with all relevant details
 function createHourObject(hour) {
     return {
         hour: hour.datetime,
@@ -98,6 +129,7 @@ function createHourObject(hour) {
     }
 };
 
+// creates an array of hour objects for the current day to be displayed later
 function createHourlyForecast(sourceArray) {
     const hourArray = [];
 
@@ -109,7 +141,7 @@ function createHourlyForecast(sourceArray) {
     return hourArray;
 }
 
-// functions to display weather data in HTML
+// function to display current day weather data in HTML
 function displayCurrentDayForecast(location, weekArray, parentContainer) {
     const currentDay = weekArray[0];
 
@@ -155,6 +187,7 @@ function displayCurrentDayForecast(location, weekArray, parentContainer) {
     parentContainer.append(locationHeader, currentTemp, feelsLikeTempDiv, descriptionDiv, highLowTempDiv);
 };
 
+// function to display weekly forecast weather data in HTML
 function displayWeeklyForecast(sourceArray, parentContainer) {
     const weekContainer = document.createElement("div");
     weekContainer.id = "week";
@@ -193,6 +226,7 @@ function displayWeeklyForecast(sourceArray, parentContainer) {
     parentContainer.appendChild(weekContainer)
 };
 
+// function to display hourly forecast weather data in HTML
 function displayHourlyForecast(sourceArray, parentContainer) {
     const hourlyContainer = document.createElement("div");
     hourlyContainer.id = "hourly";
