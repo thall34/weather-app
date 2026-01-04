@@ -1,7 +1,54 @@
 // if tempScale is true, then temperature readouts will be in Celsius, Fahrenheit if false
 var tempScale = true;
+var locationValue = undefined;
+var weekForecast = [];
+var hourlyForecast = [];
 
 const container = document.getElementById("container");
+
+const form = document.getElementById("form");
+const submit = document.getElementById("submit");
+const input = document.getElementById("location");
+const celsius = document.getElementById("C");
+const fahrenheit = document.getElementById("F");
+
+submit.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    locationValue = input.value;
+    const data = await getWeatherData(locationValue);
+
+    container.innerHTML = "";
+    container.style.display = "flex";
+    weekForecast = createWeekForecast(data.days);
+    hourlyForecast = createHourlyForecast(data.days[0].hours);
+
+    displayCurrentDayForecast(locationValue, weekForecast, container);
+    displayWeeklyForecast(weekForecast, container);
+    displayHourlyForecast(hourlyForecast, container);
+    
+    form.reset();
+});
+
+celsius.addEventListener("change", () => {
+    tempScale = true;
+    if (container.innerHTML !== "") {
+        container.innerHTML = "";
+        displayCurrentDayForecast(locationValue, weekForecast, container);
+        displayWeeklyForecast(weekForecast, container);
+        displayHourlyForecast(hourlyForecast, container);
+    };
+});
+
+fahrenheit.addEventListener("change", () => {
+    tempScale = false;
+    if (container.innerHTML !== "") {
+        container.innerHTML = "";
+        displayCurrentDayForecast(locationValue, weekForecast, container);
+        displayWeeklyForecast(weekForecast, container);
+        displayHourlyForecast(hourlyForecast, container);
+    };
+});
 
 // async function that fetches location weather data from virtual crossing
 async function getWeatherData(location) {
@@ -13,11 +60,7 @@ async function getWeatherData(location) {
         }
 
         const data = await response.json();
-        const weekForecast = createWeekForecast(data.days)
-        const hourlyForecast = createHourlyForecast(data.days[0].hours)
-        displayCurrentDayForecast(location, weekForecast, container);
-        displayWeeklyForecast(weekForecast, container);
-        displayHourlyForecast(hourlyForecast, container);
+        return data;
 
     } catch (error) {
         return new Error("Fetch Error");
@@ -28,6 +71,7 @@ function createDayObject(day) {
     return {
         day: day.datetime,
         icon: day.icon,
+        description: day.description,
         temp: day.temp,
         feelsLikeTemp: day.feelslike,
         highTemp: day.tempmax,
@@ -65,8 +109,6 @@ function createHourlyForecast(sourceArray) {
     return hourArray;
 }
 
-getWeatherData("Brantford");
-
 // functions to display weather data in HTML
 function displayCurrentDayForecast(location, weekArray, parentContainer) {
     const currentDay = weekArray[0];
@@ -88,6 +130,9 @@ function displayCurrentDayForecast(location, weekArray, parentContainer) {
         feelsLikeTempDiv.textContent = `Feels like: ${Math.round((currentDay.feelsLikeTemp * 1.8) + 32)}°F`;
     }
 
+    const descriptionDiv = document.createElement("div");
+    descriptionDiv.textContent = currentDay.description;
+
     const highLowTempDiv = document.createElement("div");
     highLowTempDiv.id = "range";
 
@@ -107,7 +152,7 @@ function displayCurrentDayForecast(location, weekArray, parentContainer) {
 
     highLowTempDiv.append(highTempDiv, lowTempDiv);
 
-    parentContainer.append(locationHeader, currentTemp, feelsLikeTempDiv, highLowTempDiv);
+    parentContainer.append(locationHeader, currentTemp, feelsLikeTempDiv, descriptionDiv, highLowTempDiv);
 };
 
 function displayWeeklyForecast(sourceArray, parentContainer) {
@@ -123,9 +168,10 @@ function displayWeeklyForecast(sourceArray, parentContainer) {
 
         dayDiv.textContent = daysOfWeek[dayIndex];
 
-        // const dayIconDiv = document.createElement("div");
-        // const dayIconImage = day.icon;
-        // dayIconDiv.appendChild(dayIconImage)
+        const dayIconDiv = document.createElement("div");
+        const dayIconImage = document.createElement("img");
+        dayIconImage.src = `./images/${day.icon}.png`;
+        dayIconDiv.appendChild(dayIconImage);
 
         const dayLowTempDiv = document.createElement("div");
         if (tempScale) {
@@ -141,9 +187,7 @@ function displayWeeklyForecast(sourceArray, parentContainer) {
             dayHighTempDiv.textContent = `High: ${Math.round((day.highTemp * 1.8) + 32)}°F`;
         };
 
-        // weekContainer.append(dayDiv, dayIconDiv, dayLowTempDiv, dayHighTempDiv);
-
-        weekContainer.append(dayDiv, dayLowTempDiv, dayHighTempDiv)
+        weekContainer.append(dayDiv, dayIconDiv, dayLowTempDiv, dayHighTempDiv)
     });
 
     parentContainer.appendChild(weekContainer)
@@ -177,9 +221,10 @@ function displayHourlyForecast(sourceArray, parentContainer) {
             hourDiv.textContent = `${hourNumber}:00am`
         };
 
-        // const hourIconDiv = document.createElement("div");
-        // const hourIconImage = hour.icon;
-        // hourIconDiv.appendChild(hourIconImage);
+        const hourIconDiv = document.createElement("div");
+        const hourIconImage = document.createElement("img");
+        hourIconImage.src = `./images/${hour.icon}.png`;
+        hourIconDiv.appendChild(hourIconImage);
 
         const hourTempDiv = document.createElement("div");
         if (tempScale) {
@@ -188,8 +233,7 @@ function displayHourlyForecast(sourceArray, parentContainer) {
             hourTempDiv.textContent = `${Math.round((hour.temp * 1.8) + 32)}°F`;
         };
 
-        // hourContainer.append(hourDiv, hourIconDiv, hourTempDiv);
-        hourContainer.append(hourDiv, hourTempDiv);
+        hourContainer.append(hourDiv, hourIconDiv, hourTempDiv);
 
         hourlyContainer.appendChild(hourContainer);
     });

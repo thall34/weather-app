@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+    <h1>Meteora</h1>
+    <form id="form" novalidate>
+        <label for="location">Please type in a city to get weather:</label>
+        <input type="text" name="location" id="location" placeholder="...Toronto">
+        <button id="submit">Submit</button>
+    </form>
+
+    <div id="temp-scale">
+        <div>
+            <input type="radio" id="C" name="scale" value="C" checked>
+            <label for="C">Celsius</label>
+        </div>
+        <div>
+            <input type="radio" id="F" name="scale" value="F">
+            <label for="F">Fahrenheit</label>
+        </div>
+    </div>
+
     <div id="container"></div>
 
     <script src="./script.js"></script>
